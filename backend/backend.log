@@ -1,0 +1,25 @@
+[2mDec 30 20:50:45.295[0m [92mINF[0m Arcane is starting
+[2mDec 30 20:50:45.300[0m [92mINF[0m Database schema is up to date
+[2mDec 30 20:50:45.300[0m [92mINF[0m Database initialized successfully
+panic: ENCRYPTION_KEY must be at least 32 bytes (raw/base64/hex). Provided=31 chars
+
+goroutine 1 [running]:
+github.com/getarcaneapp/arcane/backend/internal/utils.InitEncryption(0xc000227680)
+	C:/Users/James/Downloads/arcane-1.11.2/arcane-1.11.2/backend/internal/utils/encryption.go:26 +0x46c
+github.com/getarcaneapp/arcane/backend/internal/bootstrap.Bootstrap({0x7ff69bd13c30, 0xc000118870})
+	C:/Users/James/Downloads/arcane-1.11.2/arcane-1.11.2/backend/internal/bootstrap/bootstrap.go:56 +0x405
+github.com/getarcaneapp/arcane/backend/cli.init.func2(0xc00024a900?, {0x7ff699d0a0bc?, 0x7?, 0x7ff699cff388?})
+	C:/Users/James/Downloads/arcane-1.11.2/arcane-1.11.2/backend/cli/root.go:22 +0x28
+github.com/spf13/cobra.(*Command).execute(0x7ff69ce48e80, {0xc0001ae040, 0x0, 0x0})
+	C:/Users/James/go/pkg/mod/github.com/spf13/cobra@v1.10.2/command.go:1019 +0xae7
+github.com/spf13/cobra.(*Command).ExecuteC(0x7ff69ce48e80)
+	C:/Users/James/go/pkg/mod/github.com/spf13/cobra@v1.10.2/command.go:1148 +0x465
+github.com/spf13/cobra.(*Command).Execute(...)
+	C:/Users/James/go/pkg/mod/github.com/spf13/cobra@v1.10.2/command.go:1071
+github.com/spf13/cobra.(*Command).ExecuteContext(...)
+	C:/Users/James/go/pkg/mod/github.com/spf13/cobra@v1.10.2/command.go:1064
+github.com/getarcaneapp/arcane/backend/cli.Execute()
+	C:/Users/James/Downloads/arcane-1.11.2/arcane-1.11.2/backend/cli/root.go:34 +0x5f
+main.main()
+	C:/Users/James/Downloads/arcane-1.11.2/arcane-1.11.2/backend/cmd/main.go:12 +0xf
+exit status 2

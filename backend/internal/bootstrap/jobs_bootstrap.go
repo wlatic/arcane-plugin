@@ -1,0 +1,79 @@
+package bootstrap
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+
+	"github.com/getarcaneapp/arcane/backend/internal/config"
+	"github.com/getarcaneapp/arcane/backend/internal/job"
+)
+
+func initializeScheduler() (*job.Scheduler, error) {
+	scheduler, err := job.NewScheduler()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create job scheduler: %w", err)
+	}
+	return scheduler, nil
+}
+
+func registerJobs(appCtx context.Context, scheduler *job.Scheduler, appServices *Services, appConfig *config.Config) {
+	autoUpdateJob := job.NewAutoUpdateJob(scheduler, appServices.Updater, appServices.Settings)
+	if err := autoUpdateJob.Register(appCtx); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register auto-update job", "error", err)
+	}
+
+	imagePollingJob := job.NewImagePollingJob(scheduler, appServices.ImageUpdate, appServices.Settings, appServices.Environment)
+	if err := imagePollingJob.Register(appCtx); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register image polling job", "error", err)
+	}
+
+	gitPollingJob := job.NewGitPollingJob(scheduler, appServices.Git, appServices.Settings)
+	if err := gitPollingJob.Register(appCtx); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register git polling job", "error", err)
+	}
+
+	environmentHealthJob := job.NewEnvironmentHealthJob(scheduler, appServices.Environment, appServices.Settings)
+	if !appConfig.AgentMode {
+		if err := environmentHealthJob.Register(appCtx); err != nil {
+			slog.ErrorContext(appCtx, "Failed to register environment health check job", "error", err)
+		}
+	}
+
+	analyticsJob := job.NewAnalyticsJob(scheduler, appServices.Settings, nil, appConfig)
+	if err := analyticsJob.Register(appCtx); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register analytics heartbeat job", "error", err)
+	}
+
+	if err := job.RegisterEventCleanupJob(appCtx, scheduler, appServices.Event); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register event cleanup job", "error", err)
+	}
+
+	if err := job.RegisterFilesystemWatcherJob(appCtx, scheduler, appServices.Project, appServices.Template, appServices.Settings); err != nil {
+		slog.ErrorContext(appCtx, "Failed to register filesystem watcher job", "error", err)
+	}
+
+	appServices.Settings.OnImagePollingSettingsChanged = func(ctx context.Context) {
+		if err := imagePollingJob.Reschedule(ctx); err != nil {
+			slog.WarnContext(ctx, "Failed to reschedule image-polling job", "error", err)
+		}
+		if err := autoUpdateJob.Reschedule(ctx); err != nil {
+			slog.WarnContext(ctx, "Failed to reschedule auto-update job", "error", err)
+		}
+		if !appConfig.AgentMode {
+			if err := environmentHealthJob.Reschedule(ctx); err != nil {
+				slog.WarnContext(ctx, "Failed to reschedule environment-health job", "error", err)
+			}
+		}
+	}
+	appServices.Settings.OnAutoUpdateSettingsChanged = func(ctx context.Context) {
+		if err := autoUpdateJob.Reschedule(ctx); err != nil {
+			slog.WarnContext(ctx, "Failed to reschedule auto-update job", "error", err)
+		}
+	}
+	appServices.Settings.OnGitPollingSettingsChanged = func(ctx context.Context) {
+		if err := gitPollingJob.Reschedule(ctx); err != nil {
+			slog.WarnContext(ctx, "Failed to reschedule git-polling job", "error", err)
+		}
+	}
+}

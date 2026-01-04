@@ -1,0 +1,221 @@
+<script lang="ts">
+	import { cn } from '$lib/utils.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Popover as PopoverPrimitive } from 'bits-ui';
+	import { Progress } from '$lib/components/ui/progress/index.js';
+	import * as Item from '$lib/components/ui/item/index.js';
+	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
+	import { ArcaneButton } from '$lib/components/arcane-button/index.js';
+	import type { Snippet } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
+	import {
+		type LayerProgress,
+		type PullPhase,
+		getPullPhase,
+		getLayerStats,
+		showImageLayersState,
+		isIndeterminatePhase
+	} from '$lib/utils/pull-progress';
+	import { DownloadIcon, BoxIcon, ArrowDownIcon, VerifiedCheckIcon, CloseIcon } from '$lib/icons';
+
+	interface Props {
+		open?: boolean;
+		title?: string;
+		subtitle?: string;
+		progress?: number;
+		statusText?: string;
+		error?: string;
+		loading?: boolean;
+		align?: 'start' | 'center' | 'end';
+		sideOffset?: number;
+		class?: string;
+		icon?: typeof DownloadIcon;
+		iconClass?: string;
+		preventCloseWhileLoading?: boolean;
+		onCancel?: () => void;
+		layers?: Record<string, LayerProgress>;
+		children: Snippet;
+	}
+
+	let {
+		open = $bindable(false),
+		title = m.progress_title(),
+		subtitle = m.progress_subtitle(),
+		progress = $bindable(0),
+		statusText = '',
+		error = '',
+		loading = false,
+		align = 'center',
+		sideOffset = 4,
+		class: className = '',
+		icon,
+		iconClass = 'size-5',
+		preventCloseWhileLoading = true,
+		onCancel,
+		layers = {},
+		children
+	}: Props = $props();
+
+	const percent = $derived(Math.round(progress));
+	const isComplete = $derived(progress >= 100);
+
+	// Track if we've ever reached complete state to prevent flashing back
+	let hasReachedComplete = $state(false);
+
+	// Update complete tracking
+	$effect(() => {
+		if (isComplete && !error) {
+			hasReachedComplete = true;
+		}
+		// Reset when popover closes
+		if (!open) {
+			hasReachedComplete = false;
+		}
+	});
+
+	// Derive layer stats using utility
+	const layerStats = $derived(getLayerStats(layers, hasReachedComplete));
+
+	// Check if we're in an indeterminate phase (extracting with no byte progress)
+	const isIndeterminate = $derived(isIndeterminatePhase(layers, progress));
+
+	// Derive the current phase from status text using utility
+	const currentPhase = $derived.by((): PullPhase => {
+		return getPullPhase(statusText, hasReachedComplete || isComplete, !!error);
+	});
+
+	// Get localized title based on phase
+	const displayTitle = $derived.by(() => {
+		switch (currentPhase) {
+			case 'error':
+				return 'Error';
+			case 'complete':
+				return m.progress_pull_completed();
+			case 'downloading':
+				return m.progress_downloading();
+			case 'extracting':
+				return m.progress_extracting();
+			case 'verifying':
+				return m.progress_verifying();
+			case 'waiting':
+				return m.progress_waiting();
+			default:
+				return title;
+		}
+	});
+
+	// Get the appropriate icon based on phase
+	const PhaseIcon = $derived.by(() => {
+		if (currentPhase === 'extracting') return BoxIcon;
+		return icon ?? DownloadIcon;
+	});
+
+	function handleOpenChange(next: boolean) {
+		if (preventCloseWhileLoading && !next && loading) {
+			open = true;
+			return;
+		}
+		open = next;
+	}
+
+	function getLayerPhase(status: string): PullPhase {
+		return getPullPhase(status, false, false);
+	}
+</script>
+
+<Popover.Root bind:open onOpenChange={handleOpenChange}>
+	<Popover.Trigger>
+		{@render children()}
+	</Popover.Trigger>
+
+	<Popover.Content class={cn('w-80 p-2', className)} {align} {sideOffset}>
+		<Item.Root variant={error ? 'outline' : 'default'} class={cn(error && 'border-destructive/50')}>
+			<Item.Media
+				variant="icon"
+				class={cn(
+					error && 'bg-destructive/10 text-destructive',
+					isComplete && !loading && !error && 'bg-green-500/10 text-green-500'
+				)}
+			>
+				{#if error}
+					<CloseIcon class={iconClass} />
+				{:else if isComplete && !loading}
+					<VerifiedCheckIcon class={iconClass} />
+				{:else}
+					<PhaseIcon class={cn(iconClass, loading && 'animate-pulse')} />
+				{/if}
+			</Item.Media>
+			<Item.Content>
+				<Item.Title class={cn(error && 'text-destructive')}>{displayTitle}</Item.Title>
+				<Item.Description>
+					{#if error}
+						{error}
+					{:else if layerStats.total > 0}
+						{m.progress_layers_status({ completed: layerStats.completed, total: layerStats.total })}
+					{:else}
+						{hasReachedComplete ? 100 : percent}% · {statusText || subtitle}
+					{/if}
+				</Item.Description>
+			</Item.Content>
+			{#if loading && onCancel}
+				<Item.Actions>
+					<ArcaneButton action="cancel" size="sm" onclick={onCancel} />
+				</Item.Actions>
+			{/if}
+			{#if !error}
+				<Item.Footer>
+					<Progress
+						value={hasReachedComplete || isIndeterminate ? 100 : progress}
+						max={100}
+						class="h-1.5 w-full"
+						indeterminate={isIndeterminate && !hasReachedComplete}
+					/>
+				</Item.Footer>
+			{/if}
+		</Item.Root>
+
+		{#if Object.keys(layers).length > 0 && !error}
+			<Collapsible.Root bind:open={showImageLayersState.current} class="mt-2">
+				<Collapsible.Trigger
+					class="text-muted-foreground hover:text-foreground hover:bg-accent flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-colors"
+				>
+					{m.progress_show_layers()}
+					<ArrowDownIcon class={cn('size-3 transition-transform', showImageLayersState.current && 'rotate-180')} />
+				</Collapsible.Trigger>
+				<Collapsible.Content>
+					<div class="mt-2 max-h-48 space-y-1.5 overflow-y-auto">
+						{#each Object.entries(layers) as [id, layer] (id)}
+							{@const phase = hasReachedComplete ? 'complete' : getLayerPhase(layer.status)}
+							{@const layerPercent =
+								phase === 'complete' ? 100 : layer.total > 0 ? Math.round((layer.current / layer.total) * 100) : 0}
+							<div class="bg-muted/30 rounded-md px-2 py-1.5">
+								<div class="flex items-center justify-between gap-2">
+									<span class="text-muted-foreground truncate font-mono text-[10px]">{id.slice(0, 12)}</span>
+									<span
+										class={cn(
+											'text-[10px] font-medium',
+											phase === 'complete' && 'text-green-500',
+											phase === 'downloading' && 'text-blue-500',
+											phase === 'extracting' && 'text-amber-500'
+										)}
+									>
+										{#if phase === 'complete'}
+											✓
+										{:else if layer.total > 0}
+											{layerPercent}%
+										{:else}
+											{layer.status}
+										{/if}
+									</span>
+								</div>
+								<Progress value={layerPercent} max={100} class="mt-1 h-1" />
+							</div>
+						{/each}
+					</div>
+				</Collapsible.Content>
+			</Collapsible.Root>
+		{/if}
+
+		<PopoverPrimitive.Arrow class="fill-background stroke-border" />
+	</Popover.Content>
+</Popover.Root>

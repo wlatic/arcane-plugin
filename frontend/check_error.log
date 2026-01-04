@@ -1,0 +1,51 @@
+
+> arcane-frontend@1.11.2 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend
+Getting Svelte diagnostics...
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\lib\types\git-identity.type.ts[39m:1:38
+[31mError[39m: Cannot find module './base/response.type' or its corresponding type declarations. 
+[36mimport type { BaseApiResponse } from [35m'./base/response.type'[36m;[39m
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\lib\services\git-identity-service.ts[39m:1:21
+[31mError[39m: Cannot find module '$lib/api' or its corresponding type declarations. 
+[36mimport { api } from [35m'$lib/api'[36m;
+import type { GitIdentity, CreateGitIdentityDto } from '../types/git-identity.type';[39m
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\lib\services\git-identity-service.ts[39m:3:38
+[31mError[39m: Cannot find module '../types/base/response.type' or its corresponding type declarations. 
+[36mimport type { GitIdentity, CreateGitIdentityDto } from '../types/git-identity.type';
+import type { BaseApiResponse } from [35m'../types/base/response.type'[36m;[39m
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\routes\(app)\settings\git\+page.svelte[39m:143:6
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m				<div>
+					[35m<label class="text-surface-300 mb-1 block text-sm font-medium">Name</label>[36m
+					<input[39m
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\routes\(app)\settings\git\+page.svelte[39m:153:6
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m				<div>
+					[35m<label class="text-surface-300 mb-1 block text-sm font-medium">Username</label>[36m
+					<input[39m
+
+c:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend\[32msrc\routes\(app)\settings\git\+page.svelte[39m:163:6
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m				<div>
+					[35m<label class="text-surface-300 mb-1 block text-sm font-medium">Personal Access Token</label>[36m
+					<input[39m
+
+====================================
+[31msvelte-check found 3 errors and 3 warnings in 3 files
+[39mnpm error Lifecycle script `check` failed with error:
+npm error code 1
+npm error path C:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend
+npm error workspace arcane-frontend@1.11.2
+npm error location C:\Users\James\Downloads\arcane-1.11.2\arcane-1.11.2\frontend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
