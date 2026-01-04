@@ -72,8 +72,7 @@
 									<InfoIcon class="size-4" />
 									<Alert.Title>Advanced Feature Requirements</Alert.Title>
 									<Alert.Description>
-										Git features require <code>git</code> installed on the host. ZFS reporting requires access to Docker/ZFS tooling
-										on the host. Ensure your environment meets these requirements before enabling.
+										Enables advanced resilience features. ZFS reporting requires access to Docker/ZFS tooling on the host.
 									</Alert.Description>
 								</Alert.Root>
 							</div>
