@@ -61,6 +61,36 @@ type Update struct {
 	// Required: false
 	PollingInterval *string `json:"pollingInterval,omitempty"`
 
+	// OpsModeEnabled indicates if advanced operations features are enabled.
+	//
+	// Required: false
+	OpsModeEnabled *string `json:"opsModeEnabled,omitempty"`
+
+	// GitGlobalRepo is the default Git repository URL.
+	//
+	// Required: false
+	GitGlobalRepo *string `json:"gitGlobalRepo,omitempty"`
+
+	// GitGlobalBranch is the default Git branch.
+	//
+	// Required: false
+	GitGlobalBranch *string `json:"gitGlobalBranch,omitempty"`
+
+	// GitGlobalUser is the default Git username.
+	//
+	// Required: false
+	GitGlobalUser *string `json:"gitGlobalUser,omitempty"`
+
+	// GitGlobalToken is the default Git token.
+	//
+	// Required: false
+	GitGlobalToken *string `json:"gitGlobalToken,omitempty"`
+
+	// GitPollingInterval is the interval for checking Git updates.
+	//
+	// Required: false
+	GitPollingInterval *string `json:"gitPollingInterval,omitempty"`
+
 	// AutoInjectEnv indicates if project .env variables should be automatically injected into all containers.
 	//
 	// Required: false
