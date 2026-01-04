@@ -214,3 +214,5 @@ require (
 	modernc.org/sqlite v1.39.0 // indirect
 	tags.cncf.io/container-device-interface v1.1.0 // indirect
 )
+
+replace github.com/getarcaneapp/arcane/types => ../types
